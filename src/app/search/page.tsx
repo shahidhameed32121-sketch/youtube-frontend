@@ -1,13 +1,13 @@
-export const dynamic = "force-dynamic";
-"use client";
+"use client"; // 👈 Yeh hamesha sabse upar hona chahiye
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function SearchPage() {
+// 👇 Asal Logic ko alag component banaya
+function SearchResults() {
   const searchParams = useSearchParams();
-  const query = searchParams.get("query"); // URL se lafz uthao (e.g. ?query=funny)
+  const query = searchParams.get("query");
   
   const [videos, setVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,11 +16,9 @@ export default function SearchPage() {
     const fetchVideos = async () => {
       setLoading(true);
       try {
-        // Backend ko bolo: "Is lafz wali videos do"
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/videos?query=${query}`);
         const data = await res.json();
         if (data.success) {
-            // Note: Backend pagination deta hai (docs array ke andar videos hoti hain)
             setVideos(data.data.docs || data.data); 
         }
       } catch (error) {
@@ -85,5 +83,14 @@ export default function SearchPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// 👇 Main Component me Suspense lagaya (Vercel Build Fix)
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="text-white text-center mt-20">Loading...</div>}>
+      <SearchResults />
+    </Suspense>
   );
 }
